@@ -1,0 +1,24 @@
+{
+  "name": "Google Search ChatGPT Helper",
+  "version": "1.0",
+  "manifest_version": 3,
+
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [ "https://www.google.com/search*" ],
+      "js": ["inject_script.js"]
+    }
+  ],
+
+  "permissions": [
+    "tabs", "scripting"
+  ],
+
+  "host_permissions": [
+     "https://chat.openai.com/*"
+  ]
+}
