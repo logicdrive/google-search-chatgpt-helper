@@ -30,13 +30,15 @@ class Request
   /** JSON 데이터를 요청하고, 그 결과를 JSON 형태로 받기 위해서 */
   static async JSON_Request(url, request_type, json_body={}, extra_header_infos={})
   {
-    return (await Request.request_Using_JSON(url, request_type, json_body, extra_header_infos)).json()
+    const RES_OBJ = await Request.request_Using_JSON(url, request_type, json_body, extra_header_infos)
+    return (RES_OBJ.ok) ? RES_OBJ.json() : {is_error:true, status:RES_OBJ.status}
   }
 
   /** text/stream 형태의 SSE 통신 데이터관련 eventStream 객체를 얻기 위해서 */
   static async create_Event_Stream_JSON_Request(url, request_type, json_body={}, extra_header_infos={})
   {
-    return (await Request.request_Using_JSON(url, request_type, json_body, extra_header_infos)).body.getReader()
+    const RES_OBJ = await Request.request_Using_JSON(url, request_type, json_body, extra_header_infos)
+    return (RES_OBJ.ok) ? RES_OBJ.body.getReader() : {is_error:true, status:RES_OBJ.status}
   }
 
   /** JSON 데이터로 서버에 요청하기 위해서 */
