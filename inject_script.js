@@ -119,13 +119,24 @@ class ChatGPT_API
     /** 새로운 대화를 시작하기 위해서 */
     static async start_Conversation(input_message, output_message_callback)
     {
+        let chunk_data_buffer = ""
         await ChatGPT_API.event_Stream_JSON_Request_With_Access_Token(`${ChatGPT_API.ROOT_DOMAIN}/backend-api/conversation`, "POST", (chunk_data) => {
             if(chunk_data.startsWith("data: [DONE]")) return
+            chunk_data_buffer += chunk_data
 
-            const MESSAGE_OBJECTS = new Array(...chunk_data.matchAll(/data: (\{"message": .* "error": null\})/g)).map((pattern) => JSON.parse(pattern[1]))
+            const MESSAGE_OBJECTS = new Array(...chunk_data_buffer.matchAll(/data: (\{"message": .* "error": null\})/g)).map((pattern) => JSON.parse(pattern[1]))
+            if(MESSAGE_OBJECTS.length == 0) return
+
             const LAST_MESSAGE_OBJECT = MESSAGE_OBJECTS[MESSAGE_OBJECTS.length-1]
+            if(LAST_MESSAGE_OBJECT.message == undefined) return
+            if(LAST_MESSAGE_OBJECT.message.content == undefined) return
+
             const OUTPUT_MESSAGE = LAST_MESSAGE_OBJECT.message.content.parts[0]
             output_message_callback(OUTPUT_MESSAGE)
+
+            chunk_data_buffer = ""
+            const OUTPUT_DIV_SEL = document.getElementById("ChatGPT_Output_Div")
+            OUTPUT_DIV_SEL.scrollTop = OUTPUT_DIV_SEL.scrollHeight
         }, {"action":"next",
             "messages":[{"id":UUID.UUIDv4(),"role":"user","content":{"content_type":"text","parts":[input_message]}}],
             "parent_message_id":UUID.UUIDv4(),
@@ -136,13 +147,24 @@ class ChatGPT_API
     /** 이미 진행중인 대화를 이어나가기 위해서 */
     static async continue_Conversation(input_message, output_message_callback, conversation_id)
     {
+        let chunk_data_buffer = ""
         await ChatGPT_API.event_Stream_JSON_Request_With_Access_Token(`${ChatGPT_API.ROOT_DOMAIN}/backend-api/conversation`, "POST", (chunk_data) => {
             if(chunk_data.startsWith("data: [DONE]")) return
+            chunk_data_buffer += chunk_data
 
-            const MESSAGE_OBJECTS = new Array(...chunk_data.matchAll(/data: (\{"message": .* "error": null\})/g)).map((pattern) => JSON.parse(pattern[1]))
+            const MESSAGE_OBJECTS = new Array(...chunk_data_buffer.matchAll(/data: (\{"message": .* "error": null\})/g)).map((pattern) => JSON.parse(pattern[1]))
+            if(MESSAGE_OBJECTS.length == 0) return
+
             const LAST_MESSAGE_OBJECT = MESSAGE_OBJECTS[MESSAGE_OBJECTS.length-1]
+            if(LAST_MESSAGE_OBJECT.message == undefined) return
+            if(LAST_MESSAGE_OBJECT.message.content == undefined) return
+
             const OUTPUT_MESSAGE = LAST_MESSAGE_OBJECT.message.content.parts[0]
             output_message_callback(OUTPUT_MESSAGE)
+
+            chunk_data_buffer = ""
+            const OUTPUT_DIV_SEL = document.getElementById("ChatGPT_Output_Div")
+            OUTPUT_DIV_SEL.scrollTop = OUTPUT_DIV_SEL.scrollHeight
         }, {"action":"next",
             "conversation_id":conversation_id,
             "messages":[{"id":UUID.UUIDv4(),"role":"user","content":{"content_type":"text","parts":[input_message]}}],
